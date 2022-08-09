@@ -11,16 +11,19 @@ func ConvertNilToEmptySlice(object interface{}) interface{} {
 	}
 	switch objectType.Kind() {
 	case reflect.Ptr:
-		if !objectValue.Elem().CanInterface() {
+		if objectValue.IsNil() || !objectValue.Elem().CanInterface() {
 			break
 		}
 		newObjectValue := reflect.New(objectType.Elem())
 		newObjectValue.Elem().Set(reflect.ValueOf(ConvertNilToEmptySlice(objectValue.Elem().Interface())))
 		return newObjectValue.Interface()
 	case reflect.Struct:
+		if objectType.String() == "time.Time" {
+			break
+		}
 		newObjectValue := reflect.New(objectType)
 		for i := 0; i < objectType.NumField(); i++ {
-			if !objectValue.Field(i).CanInterface() {
+			if (objectValue.Field(i).Type().Kind() == reflect.Interface && objectValue.Field(i).IsNil()) || !objectValue.Field(i).CanInterface() {
 				continue
 			}
 			newObjectValue.Elem().Field(i).Set(reflect.ValueOf(ConvertNilToEmptySlice(objectValue.Field(i).Interface())))
